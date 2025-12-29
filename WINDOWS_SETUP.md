@@ -1,33 +1,19 @@
 # Setup Rápido para Windows
 
-## 🎯 Lo que necesitas instalar (5 minutos)
+## 🎯 Lo que necesitas instalar (2 minutos)
 
-### 1. **Python y pip** (si no lo tienes)
-
-Descarga e instala Python desde: https://www.python.org/downloads/
-
-✅ Marca la opción **"Add Python to PATH"** durante la instalación
-
-### 2. **yt-dlp** (extractor de transcripciones)
-
-Abre PowerShell o Git Bash y ejecuta:
-
-```bash
-pip install yt-dlp
-```
-
-Verifica que funciona:
-```bash
-yt-dlp --version
-```
-
-### 3. **Node.js packages** (ya están en package.json)
+### 1. **Node.js packages** (extracción de transcripciones + generación de imágenes)
 
 ```bash
 npm install
 ```
 
-### 4. **Configura tu API key de Gemini**
+Esto instalará:
+- ✅ **youtube-transcript** - Extracción de transcripciones (sin dependencias externas)
+- ✅ **@google/genai** - Generación de imágenes con Gemini
+- ✅ **playwright** - Creación de carouseles
+
+### 2. **Configura tu API key de Gemini**
 
 **Opción A: Variable de entorno permanente (Windows)**
 
@@ -87,17 +73,6 @@ Claude ejecutará todo el proceso automáticamente.
 
 ## 🐛 Problemas comunes en Windows
 
-### "yt-dlp no es reconocido como comando"
-
-**Solución:** Reinicia tu terminal después de instalar Python/pip.
-
-### "pip no es reconocido como comando"
-
-**Solución:**
-1. Reinstala Python
-2. Marca "Add Python to PATH"
-3. Reinicia la terminal
-
 ### "GEMINI_API_KEY no está configurada"
 
 **Solución:**
@@ -134,20 +109,17 @@ C:\Users\TuUsuario\Personal_AI_Infrastructure\
 ## ⚡ Quick Start (resumen)
 
 ```bash
-# 1. Instalar yt-dlp
-pip install yt-dlp
-
-# 2. Instalar packages
+# 1. Instalar packages
 npm install
 
-# 3. Configurar API key
+# 2. Configurar API key
 $env:GEMINI_API_KEY="AIzaSyBKNNBpdhHTzcNesz0xijYOri5kw1kUh7g"
 
-# 4. En Cursor, ejecutar:
+# 3. En Cursor, ejecutar:
 /transform-video https://youtube.com/watch?v=VIDEO_ID
 ```
 
-**Tiempo total: ~5 minutos de setup + 5 minutos por video**
+**Tiempo total: ~2 minutos de setup + 5 minutos por video**
 
 ---
 

@@ -5,7 +5,7 @@ description: Transform YouTube video into 6-10 LinkedIn posts with visuals for M
 # Transform Video to LinkedIn Posts
 
 **IMPORTANT:** This command orchestrates the entire content generation process. It will:
-1. Extract YouTube transcript using yt-dlp
+1. Extract YouTube transcript using youtube-transcript package
 2. Call LinkedInWriter agent to generate posts
 3. Call VisualCreator agent to generate images
 4. Organize everything in a project folder
@@ -24,27 +24,18 @@ description: Transform YouTube video into 6-10 LinkedIn posts with visuals for M
 
 Before running this command, ensure you have:
 
-✅ **yt-dlp installed** (for transcript extraction)
+✅ **Node.js packages installed** (includes youtube-transcript for extraction)
 ```bash
-# Windows:
-pip install yt-dlp
-
-# Mac:
-brew install yt-dlp
-
-# Linux:
-pip install yt-dlp
+npm install
 ```
 
 ✅ **GEMINI_API_KEY configured** (for image generation)
 ```bash
-# Add to your environment:
-export GEMINI_API_KEY="your-key-here"
-```
+# Windows PowerShell:
+$env:GEMINI_API_KEY="your-key-here"
 
-✅ **Node.js packages installed**
-```bash
-npm install
+# Mac/Linux:
+export GEMINI_API_KEY="your-key-here"
 ```
 
 ---
