@@ -66,3 +66,13 @@ credentials/
 .claude/pai_updates/
 .claude/pai_backups/
 .claude/.pai-sync-history
+
+# LinkedIn Content Generation System
+content-projects/
+*.png
+*.jpg
+*.jpeg
+*.pdf
+!Documentation/**/*.png
+!Documentation/**/*.jpg
+!.claude/Skills/**/*.png
