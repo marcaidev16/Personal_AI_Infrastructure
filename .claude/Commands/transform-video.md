@@ -4,489 +4,338 @@ description: Transform YouTube video into 6-10 LinkedIn posts with visuals for M
 
 # Transform Video to LinkedIn Posts
 
-## Purpose
-Multi-phase process that transforms a YouTube video transcript into publication-ready LinkedIn content:
-- Extracts video transcript
-- Generates 6-10 LinkedIn posts (5 strategies)
-- Creates visuals (infographics, carousels, mockups)
-- Organizes everything in project directory
-- Ready for scheduling/publishing
+**IMPORTANT:** This command orchestrates the entire content generation process. It will:
+1. Extract YouTube transcript using yt-dlp
+2. Call LinkedInWriter agent to generate posts
+3. Call VisualCreator agent to generate images
+4. Organize everything in a project folder
 
 ---
 
-## Prerequisites Check (Phase 0)
+## Quick Start
 
-Before starting, verify these dependencies are installed:
+```
+/transform-video https://youtube.com/watch?v=VIDEO_ID
+```
 
+---
+
+## Prerequisites
+
+Before running this command, ensure you have:
+
+✅ **yt-dlp installed** (for transcript extraction)
 ```bash
-☐ YouTube MCP server (for transcript extraction)
-☐ Nano Banana Pro / visualkit CLI (for image generation)
-☐ Playwright (for carousel text overlay)
-☐ Cloudinary API key (optional - for image hosting)
+# Windows:
+pip install yt-dlp
+
+# Mac:
+brew install yt-dlp
+
+# Linux:
+pip install yt-dlp
 ```
 
-**If any missing:**
-- See `Documentation/SETUP_GUIDE.md` for installation instructions
-- Critical: YouTube MCP and Nano Banana Pro
-- Optional: Cloudinary (can save files locally instead)
-
----
-
-## Process Overview
-
+✅ **GEMINI_API_KEY configured** (for image generation)
+```bash
+# Add to your environment:
+export GEMINI_API_KEY="your-key-here"
 ```
-┌─────────────────────────────────────────────────────────┐
-│                   TRANSFORM VIDEO PROCESS                │
-├─────────────────────────────────────────────────────────┤
-│                                                           │
-│  PHASE 0: System Check                                   │
-│    → Verify all tools installed                          │
-│    → Check API keys configured                           │
-│                                                           │
-│  PHASE 1: Extract Content                                │
-│    → Fetch YouTube transcript                            │
-│    → Save to project directory                           │
-│                                                           │
-│  PHASE 2: Generate Posts                                 │
-│    → Spawn LinkedInWriter agent                          │
-│    → Agent generates 6-10 posts                          │
-│    → Save posts to JSON + markdown                       │
-│                                                           │
-│  PHASE 3: Generate Visuals                               │
-│    → Spawn VisualCreator agent (in parallel)             │
-│    → Generate infographics/carousels/mockups             │
-│    → Save images to project directory                    │
-│                                                           │
-│  PHASE 4: Review & Edit                                  │
-│    → Display all generated posts                         │
-│    → Allow user to request edits                         │
-│    → Regenerate specific posts if needed                 │
-│                                                           │
-│  PHASE 5: Finalize                                       │
-│    → Organize all files                                  │
-│    → Generate posting calendar                           │
-│    → Provide summary report                              │
-│                                                           │
-│  (Optional) PHASE 6: Publish                             │
-│    → Schedule to Postis (if configured)                  │
-│    → Or export for manual posting                        │
-│                                                           │
-└─────────────────────────────────────────────────────────┘
+
+✅ **Node.js packages installed**
+```bash
+npm install
 ```
 
 ---
 
-## Execution Steps
+## How It Works
 
 ### PHASE 0: System Check
 
-Run pre-flight checks:
+Verify dependencies:
+- yt-dlp for transcript extraction
+- Node.js scripts for image generation
+- GEMINI_API_KEY for visuals
 
+### PHASE 1: Extract Transcript
+
+Use the extract-transcript script:
 ```bash
-# Check YouTube MCP
-echo "Checking YouTube MCP server..."
-# Verify connection to YouTube transcript extraction
-
-# Check Nano Banana Pro
-echo "Checking visualkit/Nano Banana Pro..."
-which visualkit || echo "⚠️  visualkit not found"
-
-# Check Playwright
-echo "Checking Playwright..."
-npx playwright --version || echo "⚠️  Playwright not found"
-
-# Check Cloudinary (optional)
-echo "Checking Cloudinary API key..."
-[[ -n "$CLOUDINARY_API_KEY" ]] && echo "✅ Configured" || echo "⚠️  Not configured (will save locally)"
+node .claude/Tools/extract-transcript.mjs "VIDEO_URL" transcript.json
 ```
 
-**If all pass:** Proceed to Phase 1
-**If any fail:** Stop and show setup instructions
-
----
-
-### PHASE 1: Extract Content
-
-**Input required:** YouTube URL
-
-```markdown
-## Extracting video transcript...
-
-Video URL: [user provided URL]
-```
-
-**Process:**
-1. Use YouTube MCP to fetch transcript
-2. Extract video title and metadata
-3. Create project directory: `./content-projects/YYYY-MM-DD-[video-slug]/`
-4. Save transcript to: `source-transcript.md`
-5. Save metadata to: `metadata.json`
-
-**Output:**
-```
-✅ Transcript extracted
-✅ Project directory created: ./content-projects/2024-12-29-ai-correctness/
-✅ Ready for content generation
-```
-
----
+This will:
+- Download video transcript/subtitles
+- Extract metadata (title, duration, channel)
+- Save to JSON file with cleaned transcript text
 
 ### PHASE 2: Generate Posts
 
-**Spawn LinkedInWriter agent:**
+Spawn the **LinkedInWriter** agent with instructions:
 
 ```markdown
-## Generating LinkedIn posts...
+You are the LinkedInWriter agent. Generate 6-10 LinkedIn posts from this transcript.
 
-Agent: LinkedInWriter
-Task: Transform transcript into 6-10 posts using 5 strategies
-References: Loading WRITING_CORE, POST_STRATEGIES, SKILL.md
+TRANSCRIPT:
+[transcript text here]
+
+REQUIREMENTS:
+1. Extract 2-4 themes relevant to Marc's ICP (mid-market B2B executives)
+2. Generate posts using the 5 strategies (Historia, Educativo, Contrarian, Caso, Lead Magnet)
+3. Follow WRITING_CORE.md principles
+4. Each post must pass the quality checklist
+5. Output as structured JSON
+
+REFERENCES:
+- Load .claude/Skills/Writing/WRITING_CORE.md
+- Load .claude/Skills/Writing/POST_STRATEGIES.md
+- Load .claude/Skills/LinkedIn/SKILL.md
+
+OUTPUT FORMAT:
+{
+  "video_title": "...",
+  "themes": ["theme1", "theme2", ...],
+  "posts": [
+    {
+      "number": 1,
+      "theme": "...",
+      "strategy": "Historia Personal | Educativo | Contrarian | Caso | Lead Magnet",
+      "hook": "First 2 lines...",
+      "body": "Full post text...",
+      "visual_instruction": "Description of visual needed",
+      "cta": "Call to action",
+      "word_count": 200
+    },
+    ...
+  ]
+}
 ```
-
-**Agent process** (autonomous):
-1. Read transcript
-2. Extract 2-4 themes
-3. Filter for ICP relevance
-4. Map theme × strategy combinations
-5. Generate posts (6-10 total)
-6. Quality check each post
-7. Output results
-
-**Output files:**
-- `posts.json` - Structured data (for programmatic use)
-- `posts.md` - Human-readable posts (for review)
-- `visual-requirements.json` - Visual generation tasks for Phase 3
-
-**Progress indicator:**
-```
-Analyzing transcript... ✓
-Extracting themes... ✓
-Filtering for relevance... ✓
-Generating posts... [1/10] [2/10] [3/10] ... ✓
-Quality checking... ✓
-Saving output... ✓
-```
-
----
 
 ### PHASE 3: Generate Visuals
 
-**Spawn VisualCreator agent** (in parallel with or after Phase 2):
-
-```markdown
-## Generating visuals...
-
-Agent: VisualCreator
-Task: Create visuals for posts requiring images
-Input: visual-requirements.json from Phase 2
-```
-
-**Agent process** (autonomous):
-1. Read visual requirements
-2. For each required visual:
-   - If "personal photo" → Skip (user uploads manually)
-   - If "infographic/carousel" → Generate with Nano Banana Pro
-   - If "mockup" → Generate with Nano Banana Pro
-3. For carousels: Add text overlays with Playwright
-4. Save images to `./visuals/` directory
-5. (Optional) Upload to Cloudinary
-6. Return file paths/URLs
-
-**Output files:**
-- `./visuals/post-1-personal.md` - Instruction for user to upload photo
-- `./visuals/post-2-framework.png` - Generated infographic
-- `./visuals/post-5-leadmagnet.png` - Generated mockup
-- `./visuals/post-8-results.png` - Generated numbers visual
-
-**Progress indicator:**
-```
-Parsing visual requirements... ✓
-Generating infographic (Post 2)... ✓
-Generating mockup (Post 5)... ✓
-Generating results visual (Post 8)... ✓
-Uploading to Cloudinary... ✓ (optional)
-Saving file paths... ✓
-```
-
----
-
-### PHASE 4: Review & Edit
-
-**Display generated content:**
-
-```markdown
-## Generated Content - Ready for Review
-
-Total posts: 10
-Posts with visuals: 6
-Posts needing personal photos: 2
-
----
-
-### POST 1/10
-**Theme:** Defining "correct" before building
-**Strategy:** Historia Personal
-**Visual:** 📸 Foto personal requerida (subir manualmente)
-
-[Full post text displayed]
-
----
-
-### POST 2/10
-**Theme:** Defining "correct" before building
-**Strategy:** Educativo/Framework
-**Visual:** ✅ Generated → ./visuals/post-2-framework.png
-
-[Full post text displayed]
-
----
-
-[... continue for all posts ...]
-```
-
-**Allow edits:**
-
-User can request:
-- "Regenerate post 3 with different hook"
-- "Make post 7 shorter"
-- "Change post 5 strategy to Contrarian"
-- "Regenerate visual for post 2"
-
-**Process edits:**
-- Re-run LinkedInWriter for specific posts
-- Re-run VisualCreator for specific visuals
-- Update files accordingly
-
----
-
-### PHASE 5: Finalize
-
-**Organize project directory:**
-
-```
-content-projects/2024-12-29-ai-correctness/
-├── metadata.json
-├── source-transcript.md
-├── posts.json
-├── posts.md
-├── visual-requirements.json
-├── calendar.md
-├── summary-report.md
-└── visuals/
-    ├── post-1-personal.md (instruction)
-    ├── post-2-framework.png
-    ├── post-5-leadmagnet.png
-    └── post-8-results.png
-```
-
-**Generate posting calendar:**
-
-```markdown
-# Posting Calendar - [Video Title]
-
-## Week 1 (Jan 1-7, 2025)
-- **Mon, Jan 1**: Post 1 (Historia Personal) - Upload personal photo
-- **Wed, Jan 3**: Post 3 (Contrarian) - No visual
-- **Fri, Jan 5**: Post 6 (Lead Magnet) - Use mockup
-
-## Week 2 (Jan 8-14, 2025)
-- **Mon, Jan 8**: Post 2 (Framework) - Use infographic
-- **Wed, Jan 10**: Post 5 (Caso/Resultado) - Use numbers visual
-- **Fri, Jan 12**: Post 9 (Historia Personal) - Upload personal photo
-
-## Week 3 (Jan 15-21, 2025)
-- **Mon, Jan 15**: Post 4 (Educativo) - Use diagram
-- **Wed, Jan 17**: Post 7 (Contrarian) - No visual
-- **Fri, Jan 19**: Post 10 (Lead Magnet) - Use mockup
-
-## Week 4 (Jan 22-28, 2025)
-- **Mon, Jan 22**: Post 8 (Caso/Resultado) - Use results visual
-```
-
-**Generate summary report:**
-
-```markdown
-# Summary Report
-
-## Video Processed
-- Title: [video title]
-- URL: [youtube URL]
-- Duration: [duration]
-- Transcript length: [word count]
-
-## Content Generated
-- Posts: 10
-- Themes extracted: 3
-- Strategies used:
-  - Historia Personal: 2 posts
-  - Educativo/Framework: 3 posts
-  - Contrarian: 2 posts
-  - Caso/Resultado: 2 posts
-  - Lead Magnet: 1 post
-
-## Visuals Generated
-- Infographics: 3
-- Mockups: 1
-- Numbers visuals: 2
-- Personal photos needed: 2
-
-## Next Steps
-1. Review all posts in `posts.md`
-2. Upload personal photos for Posts 1, 6
-3. Schedule posts using `calendar.md` as guide
-4. (Optional) Use /publish command to schedule to Postis
-
-## Files
-All content saved to: ./content-projects/2024-12-29-ai-correctness/
-```
-
----
-
-### PHASE 6: Publish (Optional)
-
-**If Postis is configured:**
-
-```markdown
-Would you like to schedule these posts to Postis now?
-
-- All posts will be scheduled according to calendar.md
-- Visuals will be uploaded automatically
-- You can review/edit in Postis dashboard after scheduling
-
-[Yes / No / Let me review first]
-```
-
-**If Yes:**
-- Upload all generated images to Postis
-- Schedule posts according to calendar
-- Return Postis URLs for each scheduled post
-
-**If No or not configured:**
-- Provide export instructions
-- Show how to manually post each piece
-
----
-
-## Usage
+For each post requiring a visual, use the generate-image script:
 
 ```bash
-# Basic usage
-/transform-video https://youtube.com/watch?v=VIDEO_ID
+node .claude/Tools/generate-image.mjs "prompt" output.png
+```
 
-# With options (future enhancement)
-/transform-video https://youtube.com/watch?v=VIDEO_ID --posts 8 --no-publish
+Visual types by strategy:
+- **Historia Personal**: Note to upload personal photo (don't generate)
+- **Educativo**: Generate infographic with stickman style
+- **Contrarian**: Usually no visual needed
+- **Caso/Resultado**: Generate numbers visualization
+- **Lead Magnet**: Generate mockup of resource
+
+### PHASE 4: Organize Project
+
+Create project structure:
+```
+content-projects/YYYY-MM-DD-video-title/
+├── metadata.json          # Video metadata
+├── transcript.txt         # Raw transcript
+├── posts.json            # Structured posts data
+├── posts.md              # Human-readable posts
+├── calendar.md           # 4-week posting schedule
+├── summary.md            # Project summary
+└── visuals/              # Generated images
+    ├── post-2-framework.png
+    ├── post-5-leadmagnet.png
+    └── ...
+```
+
+### PHASE 5: Present Results
+
+Show user:
+1. All generated posts (posts.md)
+2. Visual requirements and what was generated
+3. Posting calendar suggestion
+4. Summary of themes and strategies used
+
+---
+
+## Step-by-Step Execution
+
+When user runs `/transform-video URL`, you should:
+
+**1. Check dependencies**
+```bash
+# Check yt-dlp
+yt-dlp --version || echo "❌ Please install: pip install yt-dlp"
+
+# Check GEMINI_API_KEY
+if [ -z "$GEMINI_API_KEY" ]; then
+    echo "❌ GEMINI_API_KEY not set"
+    echo "Set it with: export GEMINI_API_KEY='your-key'"
+fi
+
+# Check node packages
+[ -d "node_modules" ] || echo "⚠️ Run: npm install"
+```
+
+**2. Create project directory**
+```bash
+# Extract video ID and date
+VIDEO_ID="extracted-from-url"
+DATE=$(date +%Y-%m-%d)
+PROJECT_NAME="content-projects/${DATE}-${VIDEO_TITLE_SLUG}"
+
+mkdir -p "${PROJECT_NAME}/visuals"
+```
+
+**3. Extract transcript**
+```bash
+node .claude/Tools/extract-transcript.mjs "${VIDEO_URL}" "${PROJECT_NAME}/transcript.json"
+```
+
+**4. Generate posts (spawn LinkedInWriter agent)**
+
+Read the transcript JSON and pass it to the LinkedInWriter agent. The agent will:
+- Load writing references
+- Analyze transcript
+- Extract themes
+- Generate 6-10 posts
+- Output structured JSON
+
+**5. Generate visuals**
+
+For each post that needs a visual:
+```bash
+# Example for Framework post:
+node .claude/Tools/generate-image.mjs \
+  "Minimalist stickman infographic showing 3 steps for AI implementation..." \
+  "${PROJECT_NAME}/visuals/post-2-framework.png"
+```
+
+**6. Create calendar**
+
+Generate a 4-week posting schedule distributing the posts strategically.
+
+**7. Show results**
+
+Display to user:
+```markdown
+✅ Content Generated Successfully!
+
+📁 Project: content-projects/2024-12-29-video-title/
+
+📊 Summary:
+- Video: "Video Title Here"
+- Themes: 3
+- Posts: 10
+- Visuals: 6 generated, 2 personal photos needed
+
+📝 Posts:
+[Show all posts in readable format]
+
+📅 Calendar:
+[Show 4-week schedule]
+
+🎨 Visuals Generated:
+- post-2-framework.png
+- post-5-leadmagnet.png
+- ...
+
+📸 Personal Photos Needed:
+- Post 1: Upload photo of you working
+- Post 6: Upload selfie at office
+
+Next Steps:
+1. Review posts in: posts.md
+2. Upload personal photos
+3. Schedule posts following calendar.md
 ```
 
 ---
 
 ## Error Handling
 
-**If YouTube transcript fails:**
+**If yt-dlp not installed:**
 ```
-❌ Could not extract transcript from video
-Possible reasons:
-- Video has no captions/transcript
-- URL is incorrect
-- YouTube MCP server not configured
+❌ yt-dlp not found
 
-Solutions:
-- Check video has auto-generated or manual captions
-- Verify URL format
-- See Documentation/SETUP_GUIDE.md for MCP setup
+Install it:
+  Windows: pip install yt-dlp
+  Mac: brew install yt-dlp
+  Linux: pip install yt-dlp
+
+Then re-run the command.
 ```
 
-**If visual generation fails:**
+**If no transcript available:**
 ```
-⚠️  Visual generation failed for Post 2
-Reason: [error message]
+❌ This video has no transcript/subtitles
 
 Options:
-- Continue without visual (post as text-only)
-- Retry generation
-- Skip this post
+1. Try a different video with captions
+2. Manually paste transcript and I'll generate posts
 ```
 
-**If agent errors:**
+**If GEMINI_API_KEY missing:**
 ```
-❌ LinkedInWriter agent encountered an error
-Error: [details]
+❌ GEMINI_API_KEY not configured
 
-This usually means:
-- Writing references not loaded correctly
-- Transcript format unexpected
-- Agent configuration issue
+Get your key:
+1. Go to: https://aistudio.google.com/apikey
+2. Create API key
+3. Set it: export GEMINI_API_KEY="your-key"
 
-Try:
-- Verify .claude/Skills/Writing/ files exist
-- Check .claude/Agents/LinkedInWriter.md
-- Rerun command
+Then re-run the command.
+```
+
+**If image generation fails:**
+```
+⚠️ Visual generation failed for Post X
+
+Options:
+1. Continue without visual (text-only post)
+2. Retry generation
+3. Generate manually later
 ```
 
 ---
 
-## What This Command Does NOT Do
-
-- ❌ Does not automatically publish (requires user approval)
-- ❌ Does not edit videos or create video content
-- ❌ Does not generate captions for videos without transcripts
-- ❌ Does not translate content (Spanish only)
-- ❌ Does not generate personal photos (user must upload)
-
----
-
-## Example Output
+## Example Output Structure
 
 After running `/transform-video https://youtube.com/watch?v=ABC123`:
 
 ```
-🎬 Transform Video to LinkedIn Posts
-=====================================
-
-✅ Phase 0: System Check - All dependencies verified
-✅ Phase 1: Content Extraction - Transcript saved (2,847 words)
-✅ Phase 2: Post Generation - 10 posts created
-✅ Phase 3: Visual Generation - 6 visuals created
-✅ Phase 4: Review - Ready for your review
-✅ Phase 5: Finalized - All files organized
-
-📁 Project: ./content-projects/2024-12-29-ai-correctness/
-
-📊 Summary:
-- Posts generated: 10
-- Visuals created: 6
-- Personal photos needed: 2
-- Estimated posting calendar: 4 weeks
-
-📋 Next Steps:
-1. Review posts: cat content-projects/2024-12-29-ai-correctness/posts.md
-2. Upload personal photos for Posts 1, 6
-3. Schedule posts (see calendar.md)
-
-🚀 Optional:
-- Run /publish to schedule to Postis
-- Run /edit-post [number] to modify specific posts
+content-projects/
+└── 2024-12-29-implementing-ai-correctly/
+    ├── transcript.json         # Video data + transcript
+    ├── posts.json             # Structured posts
+    ├── posts.md               # Readable format
+    ├── calendar.md            # Posting schedule
+    ├── summary.md             # Overview
+    └── visuals/
+        ├── post-2-framework.png
+        ├── post-4-numbers.png
+        ├── post-5-mockup.png
+        └── post-1-personal.md  # Instruction to upload
 ```
 
 ---
 
-## Related Commands
+## Performance Tips
 
-- `/edit-post [number]` - Edit a specific generated post
-- `/regenerate-visual [number]` - Regenerate visual for a post
-- `/publish` - Schedule posts to Postis
-- `/export` - Export posts for manual posting
-
----
-
-## Notes
-
-- First time running may take 5-10 minutes (agent setup)
-- Subsequent runs are faster (~2-3 minutes)
-- Review all posts before publishing
-- Visuals can be regenerated without regenerating posts
-- All files are saved locally (safe to iterate)
+- First run: ~5-10 minutes (includes transcript extraction + generation)
+- Subsequent posts from same video: ~2-3 minutes (transcript cached)
+- Most time is spent in:
+  - Transcript extraction: 1-2 min
+  - Post generation (AI): 2-3 min
+  - Visual generation: 1-2 min per visual
 
 ---
 
-*Command for Marc Bau's LinkedIn content automation*
+## Customization
+
+You can adjust the generation by editing:
+- `.claude/Skills/Writing/WRITING_CORE.md` - Writing style
+- `.claude/Skills/Writing/POST_STRATEGIES.md` - Post formats
+- `.claude/Agents/LinkedInWriter.md` - Generation logic
+- `.claude/Agents/VisualCreator.md` - Visual style
+
+---
+
+*Command for Marc Bau's LinkedIn Content System*
 *Last updated: December 2024*
