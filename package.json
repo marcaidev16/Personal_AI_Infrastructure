@@ -16,7 +16,7 @@
   "dependencies": {
     "@google/genai": "^1.34.0",
     "playwright": "^1.57.0",
-    "youtube-transcript": "^1.2.1"
+    "youtubei.js": "^10.5.0"
   },
   "type": "module"
 }

@@ -2,11 +2,11 @@
 
 /**
  * YouTube Transcript Extractor
- * Uses youtube-transcript npm package - much more reliable than yt-dlp
+ * Uses youtubei.js - most robust library that mimics official YouTube client
  * Works cross-platform without external dependencies
  */
 
-import { YoutubeTranscript } from 'youtube-transcript';
+import { Innertube } from 'youtubei.js';
 import * as fs from 'fs';
 
 async function extractTranscript(videoUrl, outputPath = './transcript.json') {
@@ -26,44 +26,67 @@ async function extractTranscript(videoUrl, outputPath = './transcript.json') {
     const videoId = videoIdMatch[1];
 
     try {
-        console.log('📥 Fetching transcript...');
+        console.log('🔄 Initializing YouTube client...');
+        const youtube = await Innertube.create();
 
-        // Fetch transcript using youtube-transcript package
-        const transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
+        console.log('📥 Fetching video info and transcript...');
+        const info = await youtube.getInfo(videoId);
 
-        if (!transcriptData || transcriptData.length === 0) {
+        // Get video metadata
+        const title = info.basic_info.title;
+        const duration = info.basic_info.duration;
+        const channel = info.basic_info.author;
+
+        console.log('✅ Video found:', title);
+        console.log('👤 Channel:', channel);
+        console.log('⏱️  Duration:', Math.floor(duration / 60), 'minutes');
+
+        // Get transcript
+        console.log('📝 Fetching transcript...');
+        const transcriptData = await info.getTranscript();
+
+        if (!transcriptData || !transcriptData.transcript) {
             console.error('❌ No transcript available for this video');
             console.error('');
-            console.error('This video may not have:');
-            console.error('  - Auto-generated captions');
-            console.error('  - Manual subtitles');
+            console.error('This video does not have captions enabled.');
             console.error('');
-            console.error('Please try a different video or provide transcript manually.');
+            console.error('Possible reasons:');
+            console.error('  - Owner disabled captions');
+            console.error('  - Video is too new (captions not generated yet)');
+            console.error('  - Video is age-restricted or private');
+            console.error('');
             process.exit(1);
         }
 
-        // Convert transcript array to clean text
-        const transcript = transcriptData
-            .map(item => item.text)
+        // Extract and clean transcript text
+        const segments = transcriptData.transcript.content.body.initial_segments;
+
+        if (!segments || segments.length === 0) {
+            console.error('❌ Transcript is empty');
+            process.exit(1);
+        }
+
+        const transcript = segments
+            .map(segment => segment.snippet.text)
             .join(' ')
             .replace(/\s+/g, ' ') // Normalize whitespace
             .trim();
 
-        // Calculate duration from last timestamp
-        const duration = transcriptData[transcriptData.length - 1]?.offset || 0;
-
         console.log('✅ Transcript fetched successfully');
         console.log('📝 Word count:', transcript.split(/\s+/).length);
-        console.log('⏱️  Duration:', Math.floor(duration / 60000), 'minutes');
+        console.log('📊 Segments:', segments.length);
 
         // Prepare output
         const output = {
             videoId,
             url: videoUrl,
-            duration: Math.floor(duration / 1000), // Convert to seconds
+            title: title,
+            channel: channel,
+            duration: duration,
             transcript: transcript,
             extractedAt: new Date().toISOString(),
-            segments: transcriptData.length
+            segments: segments.length,
+            wordCount: transcript.split(/\s+/).length
         };
 
         // Save to file
@@ -74,19 +97,20 @@ async function extractTranscript(videoUrl, outputPath = './transcript.json') {
         return output;
 
     } catch (error) {
-        console.error('❌ Error extracting transcript:', error.message);
+        console.error('❌ Error extracting transcript');
         console.error('');
+        console.error('Error details:', error.message);
 
-        if (error.message.includes('Could not find') || error.message.includes('Transcript is disabled')) {
-            console.error('This video does not have transcripts enabled.');
+        if (error.message.includes('This video does not have a transcript')) {
             console.error('');
-            console.error('Possible reasons:');
-            console.error('  - Owner disabled captions');
-            console.error('  - Video is too new (captions not generated yet)');
-            console.error('  - Video is age-restricted or private');
+            console.error('This video does not have captions enabled.');
+            console.error('Please try a different video that has captions/subtitles.');
+        } else if (error.message.includes('Video unavailable')) {
             console.error('');
+            console.error('This video is unavailable (private, deleted, or age-restricted).');
         }
 
+        console.error('');
         throw error;
     }
 }
@@ -108,6 +132,6 @@ extractTranscript(videoUrl, outputPath)
     .then(() => process.exit(0))
     .catch((err) => {
         console.error('');
-        console.error('Failed to extract transcript');
+        console.error('❌ Failed to extract transcript');
         process.exit(1);
     });

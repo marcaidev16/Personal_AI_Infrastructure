@@ -9,7 +9,7 @@ npm install
 ```
 
 Esto instalará:
-- ✅ **youtube-transcript** - Extracción de transcripciones (sin dependencias externas)
+- ✅ **youtubei.js** - Extracción de transcripciones (imita cliente oficial de YouTube)
 - ✅ **@google/genai** - Generación de imágenes con Gemini
 - ✅ **playwright** - Creación de carouseles
 
